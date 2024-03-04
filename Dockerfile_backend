@@ -1,0 +1,32 @@
+# Use the official Node.js image as the base image for backend
+FROM node:20.0.0-alpine AS backend
+
+# Set the working directory for backend
+WORKDIR /app/quirknotes/backend
+
+# Copy backend package files
+COPY quirknotes/backend/package*.json ./
+
+# Install backend dependencies
+RUN npm install
+
+# Copy backend source code
+COPY quirknotes/backend ./
+
+# Build backend
+RUN npm run build
+
+# Use a lightweight webserver to serve backend assets
+FROM nginx:alpine AS webserver
+
+# Set the working directory for backend
+WORKDIR /usr/share/nginx/html
+
+# Copy backend build from backend stage to nginx directory
+COPY --from=backend /app/quirknotes/backend/build ./
+
+# Expose port 3000 to serve the backend
+EXPOSE 3000
+
+# Command to start nginx and serve backend
+CMD ["nginx", "-g", "daemon off;"]
